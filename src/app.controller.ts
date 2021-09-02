@@ -13,7 +13,7 @@ export class AppController {
         private readonly redisService: RedisService,
         private readonly eventService: EventService,
     ) {
-        // this.redisService.flushAll();
+        this.redisService.flushAll();
     }
 
     @Get()
@@ -40,17 +40,22 @@ export class AppController {
             throw new HttpException('law is required', HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        const key = this.redisService.formatKey(law, domain);
-        const status = await this.redisService.get(key);
+        if (await this.redisService.domainExists(domain)) {
+            const key = this.redisService.formatKey(law, domain);
+            const status = await this.redisService.get(key);
 
-        if (status === null) {
+            if (status === null) {
+                return new GetScoreResponse(domain, -1, 'not found');
+            } else if (+status === 1) {
+                return new GetScoreResponse(domain, 1, '');
+            } else {
+                return new GetScoreResponse(domain, 0, '');
+            }
+        } else {
+            await this.redisService.addDomain(domain);
             this.eventService.fetchScore(domain);
 
-            return new GetScoreResponse(domain, -1, 'not found');
-        } else if (+status === 1) {
-            return new GetScoreResponse(domain, 1, '');
-        } else {
-            return new GetScoreResponse(domain, 0, '');
+            return new GetScoreResponse(domain, -1, 'unknown');
         }
     }
 }

@@ -12,6 +12,7 @@ export class RedisService {
     private readonly setAsync;
     private readonly saddAsync;
     private readonly smembersAsync;
+    private readonly sismemberAsync;
 
     // TODO: remove
     private readonly flushallAsync;
@@ -25,6 +26,7 @@ export class RedisService {
             this.setAsync = promisify(this.client.set).bind(this.client);
             this.saddAsync = promisify(this.client.sadd).bind(this.client);
             this.smembersAsync = promisify(this.client.smembers).bind(this.client);
+            this.sismemberAsync = promisify(this.client.sismember).bind(this.client);
             this.flushallAsync = promisify(this.client.flushall).bind(this.client);
         } catch (e) {
             throw new Error(e);
@@ -40,13 +42,15 @@ export class RedisService {
         return this.smembersAsync(prefixedDLKey);
     }
 
-    public parseKey(key: string): { law: number, domain: string, threshold: number } {
-        const keySplt = key.split('_');
-        return {
-            law: +keySplt[0],
-            domain: keySplt[1],
-            threshold: +keySplt[2],
-        };
+    public async domainExists(domain: string): Promise<boolean> {
+        const prefixedDLKey = this.getPrefixedKey(this.domainList);
+        const isMember = await this.sismemberAsync(prefixedDLKey, domain);
+        return isMember === 1;
+    }
+
+    public async addDomain(domain: string): Promise<void> {
+        const prefixedDLKey = this.getPrefixedKey(this.domainList);
+        await this.saddAsync(prefixedDLKey, domain);
     }
 
     public formatKey(law: number, domain: string): string {
@@ -63,10 +67,6 @@ export class RedisService {
             } else {
                 await this.setAsync(prefixedKey, value);
             }
-
-            const prefixedDLKey = this.getPrefixedKey(this.domainList);
-            const { domain } = this.parseKey(key);
-            await this.saddAsync(prefixedDLKey, domain);
 
             return true;
         } catch (e) {
