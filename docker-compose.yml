@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+
+    redis:
+      container_name: redis-6380
+      image: "redis:alpine"
+      command: redis-server --requirepass redis
+      ports:
+        - ${REDIS_PORT}:6379
+      environment:
+        - REDIS_REPLICATION_MODE=master
+      networks:
+        - rednet
+
+networks:
+  rednet:
