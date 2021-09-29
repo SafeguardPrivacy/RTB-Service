@@ -1,4 +1,4 @@
-export class CompanyScore {
+export declare class CompanyScore {
     domain: string;
     law: number;
     score: number;

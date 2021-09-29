@@ -53,9 +53,8 @@ export class RedisService {
         await this.saddAsync(prefixedDLKey, domain);
     }
 
-    public formatKey(law: number, domain: string): string {
-        const threshold = this.thresholdService.getThreshold();
-        return `${law}_${domain}_${threshold}`;
+    public formatKey(law: number, domain: string, auditKey = false): string {
+        return `${law}_${domain}${auditKey ? '_audit' : ''}`;
     }
 
     public async set(key: string, value: string, expire?: number): Promise<boolean> {

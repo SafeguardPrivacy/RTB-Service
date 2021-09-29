@@ -18,8 +18,11 @@ export class FetchScoreListener {
     async handleScoreFetchEvent(payload: FetchScoreEvent): Promise<void> {
         this.sfgpService.fetchScores([payload.domain]).subscribe(async (companies) => {
             for (const company of companies) {
+                console.log(company);
                 const key = this.redisService.formatKey(company.law, company.domain);
-                await this.redisService.set(key, company.status.toString());
+                const auditKey = this.redisService.formatKey(company.law, company.domain, true);
+                await this.redisService.set(key, company.score.toString());
+                await this.redisService.set(auditKey, company.audited.toString());
             }
 
             this.loggerService.log('Score DB Updated');

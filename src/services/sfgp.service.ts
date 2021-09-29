@@ -31,7 +31,9 @@ export class SfgpService {
             this.fetchScores(domains).subscribe(async (scores) => {
                 for (const score of scores) {
                     const key = this.redisService.formatKey(score.law, score.domain);
-                    await this.redisService.set(key, ''+ score.status);
+                    const auditKey = this.redisService.formatKey(score.law, score.domain, true);
+                    await this.redisService.set(key, score.score.toString());
+                    await this.redisService.set(auditKey, score.audited.toString());
                 }
 
                 this.loggerService.log('Score DB Updated');
@@ -44,7 +46,7 @@ export class SfgpService {
     public fetchScores(domains: string[]): Observable<CompanyScore[]> {
         const keyStr = domains.join(',');
         const encodedStr = Buffer.from(keyStr).toString('base64');
-        const url = this.API_URL + '/integrations/scores?d='+ encodedStr +'&t=' + this.thresholdService.getThreshold();
+        const url = this.API_URL + '/integrations/scores?d='+ encodedStr;
 
         return this.httpService
             .get(url, {headers: {'api-key': this.API_TOKEN}})

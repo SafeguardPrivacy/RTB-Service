@@ -42,20 +42,21 @@ export class AppController {
 
         if (await this.redisService.domainExists(domain)) {
             const key = this.redisService.formatKey(law, domain);
-            const status = await this.redisService.get(key);
+            const auditKey = this.redisService.formatKey(law, domain, true);
 
-            if (status === null) {
-                return new GetScoreResponse(domain, -1, 'not found');
-            } else if (+status === 1) {
-                return new GetScoreResponse(domain, 1, '');
+            const score = await this.redisService.get(key);
+            const audited = await this.redisService.get(auditKey);
+
+            if (score === null) {
+                throw new HttpException('not_found', HttpStatus.NOT_FOUND);
             } else {
-                return new GetScoreResponse(domain, 0, '');
+                return new GetScoreResponse(domain, +score, +audited);
             }
         } else {
             await this.redisService.addDomain(domain);
             this.eventService.fetchScore(domain);
 
-            return new GetScoreResponse(domain, -1, 'unknown');
+            throw new HttpException('no_cache', HttpStatus.NOT_FOUND);
         }
     }
 }
