@@ -1,6 +1,6 @@
-# SafeguardPrivacy RTB Api
+# Safeguard✓Privacy OpenRTB Service
 
-In order to run this API, you will need a SafeguardPrivacy API Token.
+In order to run this API, you will need a Safeguard✓Privacy API Token.
 
 ## Installation
 
